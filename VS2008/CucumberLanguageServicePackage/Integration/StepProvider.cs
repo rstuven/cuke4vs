@@ -47,28 +47,54 @@ namespace CucumberLanguageServices.Integration
 
                     Debug.Print("StepProvider: Add '{0}', parent='{1}'", attribute.Name, parent != null ? parent.Name : "<null>");
 
-                    AddStep(attribute, codeClass.FullName);
+                    AddStep(attribute, codeClass);
                 }
             }
         }
 
-        private void AddStep(CodeAttribute attribute, string className)
+        private void AddStep(CodeAttribute attribute, CodeClass codeClass)
         {
             if (!STEP_ATTRIBUTES.Contains(attribute.FullName))
                 return;
 
-            _stepDefinitions.Add(new StepDefinition(Unescape(attribute.Value))
+            var attributeValue = GetAttributeValue(attribute, codeClass);
+
+            _stepDefinitions.Add(new StepDefinition(Unescape(attributeValue))
                                      {
                                          ProjectItem = attribute.ProjectItem,
                                          StartPoint = attribute.StartPoint,
                                          EndPoint = attribute.EndPoint,
                                          Function = attribute.Parent as CodeFunction,
-                                         ClassName = className
+                                         ClassName = codeClass.FullName
                                      });
 
             Debug.Print("Attribute FullName={0}, Value={1}, Unescaped={4} at {2}:{3}",
                         attribute.FullName, attribute.Value, attribute.StartPoint.Line, attribute.StartPoint.DisplayColumn,
                         Unescape(attribute.Value));
+        }
+
+        private static string GetAttributeValue(CodeAttribute attribute, CodeClass codeClass)
+        {
+            var value = attribute.Value;
+            if (!string.IsNullOrEmpty(value))
+            {
+                if (value[0] != '"' && value[0] != '@')
+                {
+                    var variable = codeClass.GetIEnumerable<CodeVariable>()
+                        .Where(v => v.IsConstant && v.Name == value)
+                        .FirstOrDefault();
+
+                    if (variable != null)
+                    {
+                        var initExpression = variable.InitExpression as string;
+                        if (initExpression != null)
+                        {
+                            value = initExpression;
+                        }
+                    }
+                }
+            }
+            return value;
         }
 
         public StepDefinition[] FindMatchesFor(string stepIdentifier)
