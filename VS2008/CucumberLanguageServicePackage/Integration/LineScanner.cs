@@ -132,7 +132,7 @@ namespace CucumberLanguageServices
 
         private static void SetIdentifierColorAndType(TokenInfo tokenInfo, StepDefinition stepDefinition)
         {
-            tokenInfo.Color = stepDefinition.IsPending? Microsoft.VisualStudio.Package.TokenColor.String : Microsoft.VisualStudio.Package.TokenColor.Comment;
+            tokenInfo.Color = stepDefinition.IsPending? Microsoft.VisualStudio.Package.TokenColor.String : Microsoft.VisualStudio.Package.TokenColor.Text;
             tokenInfo.Type = Microsoft.VisualStudio.Package.TokenType.Identifier;
         }
 
